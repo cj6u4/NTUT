@@ -26,4 +26,4 @@ int main(array<System::String ^> ^args)
 	} while (!Guess(guess));
 	return 0;
 }
-//586
+//5867896545
