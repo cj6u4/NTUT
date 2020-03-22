@@ -102,8 +102,8 @@ int CEraser::GetY2()
 
 void CEraser::Initialize()
 {
-	const int X_POS = 2;
-	const int Y_POS = 400;
+	const int X_POS = 560;
+	const int Y_POS = 192;
 	x = X_POS;
 	y = Y_POS;
 	isMovingLeft = isMovingRight= isMovingUp = isMovingDown = false;
@@ -121,10 +121,18 @@ void CEraser::OnMove()
 	const int STEP_VERTICAL = 20;
 	const int floor = 400;
 	const int ceiling = floor - STEP_VERTICAL * 10;
-	if (isMovingLeft)
+	if (isMovingLeft) {
 		x -= STEP_SIZE;
+		mapmoving = false;
+	}
+
 	if (isMovingRight)
-		x += STEP_SIZE;
+	{
+		if (x >= 570) { mapmoving = true; }
+		else { x += STEP_SIZE;}
+	}
+	else  mapmoving = false;
+
 	if (isMovingUp) 
 	{
 		y -= STEP_VERTICAL;
@@ -169,12 +177,64 @@ void CEraser::SetXY(int nx, int ny)
 	x = nx; y = ny;
 }
 
+bool CEraser::GetMovingSituation()
+{
+	return mapmoving;
+}
+
 void CEraser::OnShow()
 {
 	animation.SetTopLeft(x,y);
 	animation.OnShow();
 }
 
+map::map()
+{
+	Inital();
+}
+
+void map::LoadBitmap()
+{
+	mpanimation.AddBitmap(IDB_world_1);
+}
+
+void map::Inital()
+{
+	const int x_pos = 0;
+	const int y_pos = 0;
+	sx = x_pos;
+	sy = y_pos;
+	isMovingRight =  false;
+}
+
+int map::GetX()
+{
+	return sx;
+}
+
+int map::GetY()
+{
+	return sy;
+}
+
+void map::SetMovingRight(bool flag)
+{
+	isMovingRight = flag;
+}
+
+void map::OnMove()
+{
+	const int STEP_SIZE = 6;
+	if (isMovingRight)
+	{
+		sx -= STEP_SIZE;
+	}
+}
+void map::OnShow()
+{
+	mpanimation.SetTopLeft(sx, sy);
+	mpanimation.OnShow();
+}
 /////////////////////////////////////////////////////////////////////////////
 // 這個class為遊戲的遊戲開頭畫面物件
 /////////////////////////////////////////////////////////////////////////////
@@ -324,7 +384,27 @@ void CGameStateRun::OnMove()							// 移動遊戲元素
 	//
 	// 移動擦子
 	//
+
+	
+	//if (eraser.GetMovingSituation())
+	//{
+	//	if (eraser.GetX1() >= 557)
+	//	{
+	//		world_1.SetMovingRight(true);
+	//		eraser.SetMovingRight(false);
+	//	}
+	//	else if (eraser.GetX1() < 557)
+	//	{
+	//		eraser.SetMovingRight(true);
+	//	}
+	//}
+	//else world_1.SetMovingRight(false);
+	world_1.SetMovingRight((eraser.GetMovingSituation()));
+	world_1.OnMove();
 	eraser.OnMove();
+	
+	
+	
 	//
 	// 判斷擦子是否碰到球
 	//
@@ -352,7 +432,8 @@ void CGameStateRun::OnInit()  								// 遊戲的初值及圖形設定
 	// 開始載入資料
 	//
 	eraser.LoadBitmap();
-	background.LoadBitmap(IDB_BITMAP3);					// 載入背景的圖形
+				// 載入背景的圖形
+	world_1.LoadBitmap();
 	//
 	// 完成部分Loading動作，提高進度
 	//
@@ -372,14 +453,15 @@ void CGameStateRun::OnInit()  								// 遊戲的初值及圖形設定
 
 void CGameStateRun::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
-	const char KEY_LEFT  = 0x25; // keyboard左箭頭
-	const char KEY_UP    = 0x26; // keyboard上箭頭
+	const char KEY_LEFT = 0x25; // keyboard左箭頭
+	const char KEY_UP = 0x26; // keyboard上箭頭
 	const char KEY_RIGHT = 0x27; // keyboard右箭頭
-	const char KEY_DOWN  = 0x28; // keyboard下箭頭
+	const char KEY_DOWN = 0x28; // keyboard下箭頭
 	if (nChar == KEY_LEFT)
 		eraser.SetMovingLeft(true);
-	if (nChar == KEY_RIGHT)
+	if (nChar == KEY_RIGHT) {
 		eraser.SetMovingRight(true);
+	}
 	if (nChar == KEY_UP && eraser.GetY1()==400)
 		eraser.SetMovingUp(true);
 	
@@ -436,8 +518,7 @@ void CGameStateRun::OnShow()
 	//
 	//  貼上背景圖、撞擊數、球、擦子、彈跳的球
 	//
-	background.SetTopLeft(0, 0);
-	background.ShowBitmap();			// 貼上背景圖
+	world_1.OnShow();	
 	eraser.OnShow();					// 貼上擦子
 	//
 	//  貼上左上及右下角落的圖
